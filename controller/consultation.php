@@ -6,6 +6,9 @@ if (isset($_GET['action'])) {
         case 'schedule':
             scheduleAppointment();
             break;
+        case 'track':
+            trackAppointment();
+            break;
         default:
             echo json_encode(["success" => false, "message" => "Invalid action"]);
             break;
@@ -37,8 +40,8 @@ function scheduleAppointment()
     $reference_code = generateReferenceCode($consultation_type);
 
     // Insert into database using raw MySQL query
-    $query = "INSERT INTO consultations (reference_code, full_name, birthdate, email, phone, consultation_type, secondary_concern, schedule_date, schedule_time, comments) 
-              VALUES ('$reference_code', '$full_name', '$birthdate', '$email', '$phone', '$consultation_type', '$secondary_concern', '$schedule_date', '$schedule_time', '$comments')";
+    $query = "INSERT INTO consultations (reference_code, full_name, birthdate, email, phone, consultation_type, secondary_concern, schedule_date, schedule_time, comments, status) 
+              VALUES ('$reference_code', '$full_name', '$birthdate', '$email', '$phone', '$consultation_type', '$secondary_concern', '$schedule_date', '$schedule_time', '$comments', 'Pending')";
 
     if (mysqli_query($conn, $query)) {
         echo json_encode(["success" => true, "reference_code" => $reference_code]);
@@ -49,9 +52,36 @@ function scheduleAppointment()
     mysqli_close($conn);
 }
 
-/**
- * Generates a unique reference code.
- */
+function trackAppointment()
+{
+    global $conn;
+
+    if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+        echo json_encode(["success" => false, "message" => "Invalid request method"]);
+        return;
+    }
+
+    $reference_code = mysqli_real_escape_string($conn, $_POST['reference_code']);
+
+    $query = "SELECT status, schedule_date, schedule_time, comments FROM consultations WHERE reference_code = '$reference_code'";
+    $result = mysqli_query($conn, $query);
+
+    if (mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_assoc($result);
+        echo json_encode([
+            "success" => true,
+            "status" => $row['status'],
+            "schedule_date" => $row['schedule_date'],
+            "schedule_time" => $row['schedule_time'],
+            "comments" => $row['comments']
+        ]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Reference code not found."]);
+    }
+
+    mysqli_close($conn);
+}
+
 function generateReferenceCode($consultation_type)
 {
     global $conn;
