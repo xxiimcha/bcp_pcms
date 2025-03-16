@@ -1,55 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Track Appointment</title>
-
-  <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="../assets/plugins/fontawesome-free/css/all.min.css">
-  <!-- Bootstrap -->
-  <link rel="stylesheet" href="../assets/plugins/bootstrap/css/bootstrap.min.css">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="../assets/dist/css/adminlte.min.css">
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <style>
-    .tracking-card {
-      background-color: #17a2b8;
-      color: white;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 16px;
-    }
-    .follow-up-btn {
-      margin-top: 10px;
-    }
-  </style>
-</head>
+<?php include '../partials/head.php'; ?>
+<style>
+  .tracking-card {
+    background-color: #17a2b8;
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+  .follow-up-btn {
+    margin-top: 10px;
+  }
+</style>
 <body class="hold-transition layout-top-nav">
-<div class="wrapper">
-  <nav class="main-header navbar navbar-expand-md navbar-light navbar-white">
-    <div class="container">
-      <a href="../index.html" class="navbar-brand">
-        <span class="brand-text font-weight-bold">Public Consultation System</span>
-      </a>
-      <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarCollapse">
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item">
-            <a href="schedule.html" class="nav-link">Schedule an Appointment</a>
-          </li>
-          <li class="nav-item">
-            <a href="track.html" class="nav-link">Track</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+<?php include 'partials/nav.php'; ?>
 
   <div class="container my-5">
     <h2 class="text-center">Track Your Appointment</h2>

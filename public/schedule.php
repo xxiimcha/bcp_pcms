@@ -1,44 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Schedule an Appointment</title>
-
-  <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="../assets/plugins/fontawesome-free/css/all.min.css">
-  <!-- Bootstrap -->
-  <link rel="stylesheet" href="../assets/plugins/bootstrap/css/bootstrap.min.css">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="../assets/dist/css/adminlte.min.css">
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-</head>
+<?php include '../partials/head.php'; ?>
 <body class="hold-transition layout-top-nav">
-<div class="wrapper">
-  <nav class="main-header navbar navbar-expand-md navbar-light navbar-white">
-    <div class="container">
-      <a href="../index.html" class="navbar-brand">
-        <span class="brand-text font-weight-bold">Public Consultation System</span>
-      </a>
-      <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarCollapse">
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item">
-            <a href="schedule.html" class="nav-link">Schedule an Appointment</a>
-          </li>
-          <li class="nav-item">
-            <a href="track.html" class="nav-link">Track</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
+<?php include 'partials/nav.php'; ?>
   <div class="container my-5">
     <h2 class="text-center">Online Consultation Booking</h2>
     <p class="text-center">Fill in the details to book your consultation.</p>
@@ -81,55 +43,124 @@
             <label for="secondaryConcern">Secondary Concern</label>
             <input type="text" class="form-control" id="secondaryConcern" name="secondaryConcern">
           </div>
-          <div class="form-group">
-            <label for="schedule_date">Preferred Date</label>
-            <input type="date" class="form-control" id="schedule_date" name="schedule_date" required>
+          
+          <!-- Date & Time Row -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="schedule_date">Preferred Date</label>
+                <input type="date" class="form-control" id="schedule_date" name="schedule_date" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="schedule_time">Preferred Time</label>
+                <select class="form-control" id="schedule_time" name="schedule_time" required>
+                  <option value="">Select time</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="schedule_time">Preferred Time</label>
-            <input type="time" class="form-control" id="schedule_time" name="schedule_time" required>
-          </div>
+
           <div class="form-group">
             <label for="message">Comments / Justification</label>
             <textarea class="form-control" id="message" name="message" rows="3"></textarea>
           </div>
+
+          <!-- Terms & Conditions -->
+          <div class="form-group">
+            <input type="checkbox" id="termsCheckbox" disabled>
+            <label for="termsCheckbox">
+              I agree to the <a href="#" id="openTermsModal">Terms and Conditions</a>
+            </label>
+          </div>
+
           <button type="submit" class="btn btn-primary btn-block">Book Online Session</button>
         </form>
       </div>
     </div>
   </div>
-</div>
 
-<script src="../assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Terms & Conditions Modal -->
+  <div class="modal fade" id="termsModal" tabindex="-1" role="dialog" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>
+            By booking an appointment, you agree to our policies. You must provide accurate information and comply with consultation schedules.
+          </p>
+          <p>
+            Cancellations should be made at least 24 hours in advance. Failure to attend multiple appointments may result in restrictions.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="agreeTerms">I Agree</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- jQuery & Bootstrap -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
+
 <script>
   $(document).ready(function() {
     let today = new Date().toISOString().split('T')[0];
     $('#schedule_date').attr('min', today);
 
-    $('#schedule_date').on('change', function() {
-      let selectedDate = new Date($(this).val());
-      let now = new Date();
-      let currentTime = now.getHours() + ':' + now.getMinutes();
-      
-      if (selectedDate.toDateString() === now.toDateString()) {
-        $('#schedule_time').attr('min', currentTime);
-      } else {
-        $('#schedule_time').removeAttr('min');
-      }
+    // Ensure modal opens
+    $("#openTermsModal").on("click", function (e) {
+      e.preventDefault();
+      $("#termsModal").modal("show");
     });
 
-    $('#consultationType').change(function() {
-      if ($(this).val() === 'Others') {
-        $('#secondaryConcernContainer').hide();
-      } else {
-        $('#secondaryConcernContainer').show();
-      }
+    // Enable checkbox after agreeing
+    $("#agreeTerms").on("click", function () {
+      $("#termsCheckbox").prop("disabled", false);
+      $("#termsCheckbox").prop("checked", true);
+      $("#termsModal").modal("hide");
     });
 
+    function generateTimeSlots() {
+      let startHour = 8;
+      let endHour = 17; // 5 PM
+      let interval = 30;
+      let timeDropdown = $('#schedule_time');
+      timeDropdown.empty().append('<option value="">Select time</option>');
+
+      for (let hour = startHour; hour < endHour; hour++) {
+        for (let min = 0; min < 60; min += interval) {
+          let displayHour = hour > 12 ? hour - 12 : hour;
+          let period = hour >= 12 ? 'PM' : 'AM';
+          let formattedMin = min === 0 ? '00' : min;
+
+          let timeText = `${displayHour}:${formattedMin} ${period}`;
+          timeDropdown.append(`<option value="${hour}:${formattedMin}">${timeText}</option>`);
+        }
+      }
+    }
+
+    generateTimeSlots();
+
+    // **Form Submission via AJAX**
     $('#appointmentForm').submit(function(event) {
       event.preventDefault();
+      if (!$("#termsCheckbox").prop("checked")) {
+        Swal.fire("Please agree to the Terms and Conditions before proceeding.");
+        return;
+      }
+
       let formData = $(this).serialize();
-      
+
       $.ajax({
         url: '../controller/consultation.php?action=schedule',
         type: 'POST',
@@ -144,13 +175,9 @@
               confirmButtonText: 'OK'
             });
             $('#appointmentForm')[0].reset();
+            generateTimeSlots();
           } else {
-            Swal.fire({
-              title: 'Error!',
-              text: response.message,
-              icon: 'error',
-              confirmButtonText: 'OK'
-            });
+            Swal.fire('Error!', response.message, 'error');
           }
         },
         error: function(xhr, status, error) {
@@ -160,10 +187,5 @@
     });
   });
 </script>
-
-<!-- Bootstrap 4 -->
-<script src="../assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<!-- AdminLTE App -->
-<script src="../assets/dist/js/adminlte.min.js"></script>
 </body>
 </html>

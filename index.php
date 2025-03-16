@@ -54,8 +54,8 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav ml-auto">
-          <li class="nav-item"><a href="#appointment" class="nav-link">Schedule an Appointment</a></li>
-          <li class="nav-item"><a href="#track" class="nav-link">Track</a></li>
+          <li class="nav-item"><a href="public/schedule.php" class="nav-link">Schedule an Appointment</a></li>
+          <li class="nav-item"><a href="public/track.php" class="nav-link">Track</a></li>
           <li class="nav-item"><a href="#announcements" class="nav-link">Announcements</a></li>
         </ul>
       </div>
@@ -68,7 +68,7 @@
       <h1>Welcome to the Public Consultation System</h1>
       <p>Book your consultation appointment and track its status with ease.</p>
       <a href="public/schedule.php" class="btn btn-primary btn-lg"><i class="fas fa-calendar-alt"></i> Schedule Now</a>
-      <a href="#track" class="btn btn-outline-light btn-lg"><i class="fas fa-search"></i> Track Appointment</a>
+      <a href="public/track.php" class="btn btn-outline-light btn-lg"><i class="fas fa-search"></i> Track Appointment</a>
     </div>
   </div>
 
@@ -89,30 +89,6 @@
         </button>
       </div>
     </section>
-
-    <!-- Appointment & Tracking Section -->
-    <div class="row">
-      <div class="col-md-6">
-        <div class="card text-center shadow-sm">
-          <div class="card-body">
-            <i class="fas fa-calendar-check fa-3x text-success"></i>
-            <h3>Schedule an Appointment</h3>
-            <p>Choose a date and time for your consultation.</p>
-            <a href="public/schedule.php" class="btn btn-success">Book Now</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card text-center shadow-sm">
-          <div class="card-body">
-            <i class="fas fa-search fa-3x text-info"></i>
-            <h3>Track Your Appointment</h3>
-            <p>Check the status of your consultation request.</p>
-            <a href="public/track.php" class="btn btn-info">Track Now</a>
-          </div>
-        </div>
-      </div>
-    </div>
 
   </div>
 
