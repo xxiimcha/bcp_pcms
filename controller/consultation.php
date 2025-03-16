@@ -9,6 +9,12 @@ if (isset($_GET['action'])) {
         case 'track':
             trackAppointment();
             break;
+        case 'update_status':
+            updateAppointmentStatus();
+            break;
+        case 'view_details':
+            viewAppointmentDetails();
+            break;
         default:
             echo json_encode(["success" => false, "message" => "Invalid action"]);
             break;
@@ -103,10 +109,62 @@ function generateReferenceCode($consultation_type)
             return "CONSULT-$prefix-$letter$new_number";
         } else {
             $new_letter = chr(ord($letter) + 1);
-            return "CONSULT-$prefix-$new_letter001";
+            return "CONSULT-$prefix-$new_letter" . "001";
         }
     } else {
         return "CONSULT-$prefix-A001";
+    }
+}
+
+
+/**
+ * Updates the status of an appointment and logs the change in consultation_history.
+ */
+
+ function updateAppointmentStatus() {
+    global $conn;
+
+    if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+        echo json_encode(["success" => false, "message" => "Invalid request method"]);
+        return;
+    }
+
+    $reference_code = mysqli_real_escape_string($conn, $_POST['reference_code']);
+    $status = mysqli_real_escape_string($conn, $_POST['status']);
+    $remarks = isset($_POST['remarks']) ? mysqli_real_escape_string($conn, $_POST['remarks']) : 'No remarks';
+
+    $sql = "SELECT id FROM consultations WHERE reference_code = '$reference_code' LIMIT 1";
+    $result = mysqli_query($conn, $sql);
+
+    if ($result && mysqli_num_rows($result) > 0) {
+        $row = mysqli_fetch_assoc($result);
+        $consultation_id = $row['id'];
+
+        $updateQuery = "UPDATE consultations SET status = '$status' WHERE id = '$consultation_id'";
+        if (mysqli_query($conn, $updateQuery)) {
+            $historyQuery = "INSERT INTO consultation_history (consultation_id, status, remarks, updated_at) 
+                             VALUES ('$consultation_id', '$status', '$remarks', NOW())";
+            mysqli_query($conn, $historyQuery);
+
+            echo json_encode(["success" => true, "message" => "Appointment updated successfully"]);
+        }
+    } else {
+        echo json_encode(["success" => false, "message" => "Invalid reference code"]);
+    }
+}
+
+function viewAppointmentDetails() {
+    global $conn;
+    
+    $reference_code = mysqli_real_escape_string($conn, $_POST['reference_code']);
+    $query = "SELECT * FROM consultations WHERE reference_code = '$reference_code' LIMIT 1";
+    $result = mysqli_query($conn, $query);
+
+    if ($result && mysqli_num_rows($result) > 0) {
+        $data = mysqli_fetch_assoc($result);
+        echo json_encode(["success" => true, "data" => $data]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Appointment not found"]);
     }
 }
 ?>
