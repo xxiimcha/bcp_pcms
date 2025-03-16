@@ -69,7 +69,7 @@ function trackAppointment()
 
     $reference_code = mysqli_real_escape_string($conn, $_POST['reference_code']);
 
-    $query = "SELECT status, schedule_date, schedule_time, comments FROM consultations WHERE reference_code = '$reference_code'";
+    $query = "SELECT * FROM consultations WHERE reference_code = '$reference_code'";
     $result = mysqli_query($conn, $query);
 
     if (mysqli_num_rows($result) > 0) {
@@ -77,6 +77,7 @@ function trackAppointment()
         echo json_encode([
             "success" => true,
             "status" => $row['status'],
+            "reference_code" => $row['reference_code'],
             "schedule_date" => $row['schedule_date'],
             "schedule_time" => $row['schedule_time'],
             "comments" => $row['comments']
