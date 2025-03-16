@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="../assets/plugins/bootstrap/css/bootstrap.min.css">
   <!-- Theme style -->
   <link rel="stylesheet" href="../assets/dist/css/adminlte.min.css">
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="hold-transition layout-top-nav">
 <div class="wrapper">
@@ -80,40 +82,85 @@
             <input type="text" class="form-control" id="secondaryConcern" name="secondaryConcern">
           </div>
           <div class="form-group">
+            <label for="schedule_date">Preferred Date</label>
+            <input type="date" class="form-control" id="schedule_date" name="schedule_date" required>
+          </div>
+          <div class="form-group">
+            <label for="schedule_time">Preferred Time</label>
+            <input type="time" class="form-control" id="schedule_time" name="schedule_time" required>
+          </div>
+          <div class="form-group">
             <label for="message">Comments / Justification</label>
             <textarea class="form-control" id="message" name="message" rows="3"></textarea>
           </div>
           <button type="submit" class="btn btn-primary btn-block">Book Online Session</button>
         </form>
-        <p class="text-center mt-3" id="referenceCode"></p>
       </div>
     </div>
   </div>
 </div>
 
+<script src="../assets/plugins/jquery/jquery.min.js"></script>
 <script>
-  document.getElementById("consultationType").addEventListener("change", function() {
-    let secondaryConcern = document.getElementById("secondaryConcernContainer");
-    if (this.value === "Others") {
-      secondaryConcern.style.display = "none";
-    } else {
-      secondaryConcern.style.display = "block";
-    }
-  });
+  $(document).ready(function() {
+    let today = new Date().toISOString().split('T')[0];
+    $('#schedule_date').attr('min', today);
 
-  document.getElementById("appointmentForm").addEventListener("submit", function(event) {
-    event.preventDefault();
-    let formData = new FormData(this);
-    let consultationType = formData.get("consultationType");
-    let prefix = consultationType.substring(0, 5).toUpperCase().replace(/[^A-Z]/g, "");
-    let randomNum = Math.floor(Math.random() * 999) + 1;
-    let referenceCode = `CONSULT-${prefix}-A${randomNum.toString().padStart(3, '0')}`;
-    document.getElementById("referenceCode").innerHTML = `Your reference code: <strong>${referenceCode}</strong>`;
+    $('#schedule_date').on('change', function() {
+      let selectedDate = new Date($(this).val());
+      let now = new Date();
+      let currentTime = now.getHours() + ':' + now.getMinutes();
+      
+      if (selectedDate.toDateString() === now.toDateString()) {
+        $('#schedule_time').attr('min', currentTime);
+      } else {
+        $('#schedule_time').removeAttr('min');
+      }
+    });
+
+    $('#consultationType').change(function() {
+      if ($(this).val() === 'Others') {
+        $('#secondaryConcernContainer').hide();
+      } else {
+        $('#secondaryConcernContainer').show();
+      }
+    });
+
+    $('#appointmentForm').submit(function(event) {
+      event.preventDefault();
+      let formData = $(this).serialize();
+      
+      $.ajax({
+        url: '../controller/consultation.php?action=schedule',
+        type: 'POST',
+        data: formData,
+        dataType: 'json',
+        success: function(response) {
+          if (response.success) {
+            Swal.fire({
+              title: 'Appointment Booked!',
+              text: `Your reference code is: ${response.reference_code}`,
+              icon: 'success',
+              confirmButtonText: 'OK'
+            });
+            $('#appointmentForm')[0].reset();
+          } else {
+            Swal.fire({
+              title: 'Error!',
+              text: response.message,
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('Error:', error);
+        }
+      });
+    });
   });
 </script>
 
-<!-- jQuery -->
-<script src="../assets/plugins/jquery/jquery.min.js"></script>
 <!-- Bootstrap 4 -->
 <script src="../assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- AdminLTE App -->
