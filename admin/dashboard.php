@@ -1,5 +1,18 @@
+<?php 
+include '../database/config.php'; 
+include '../partials/head.php';
 
-<?php include '../partials/head.php'; ?>
+// Fetch counts from database
+$query = "SELECT 
+  (SELECT COUNT(*) FROM consultations WHERE status = 'New') AS new_appointments,
+  (SELECT COUNT(*) FROM consultations WHERE status = 'Completed') AS completed,
+  (SELECT COUNT(*) FROM consultations WHERE status = 'Pending') AS pending,
+  (SELECT COUNT(*) FROM consultations WHERE status = 'Cancelled') AS cancelled";
+
+$result = mysqli_query($conn, $query);
+$data = mysqli_fetch_assoc($result);
+?>
+
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
   <?php include '../partials/navbar.php'; ?>
@@ -22,7 +35,7 @@
           <div class="col-lg-3 col-6">
             <div class="small-box bg-info">
               <div class="inner">
-                <h3>150</h3>
+                <h3><?php echo $data['new_appointments']; ?></h3>
                 <p>New Appointments</p>
               </div>
               <div class="icon">
@@ -35,7 +48,7 @@
           <div class="col-lg-3 col-6">
             <div class="small-box bg-success">
               <div class="inner">
-                <h3>53</h3>
+                <h3><?php echo $data['completed']; ?></h3>
                 <p>Completed Consultations</p>
               </div>
               <div class="icon">
@@ -48,7 +61,7 @@
           <div class="col-lg-3 col-6">
             <div class="small-box bg-warning">
               <div class="inner">
-                <h3>44</h3>
+                <h3><?php echo $data['pending']; ?></h3>
                 <p>Pending Requests</p>
               </div>
               <div class="icon">
@@ -61,7 +74,7 @@
           <div class="col-lg-3 col-6">
             <div class="small-box bg-danger">
               <div class="inner">
-                <h3>65</h3>
+                <h3><?php echo $data['cancelled']; ?></h3>
                 <p>Cancelled Requests</p>
               </div>
               <div class="icon">
