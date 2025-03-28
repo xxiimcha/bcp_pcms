@@ -15,6 +15,9 @@ if (isset($_GET['action'])) {
         case 'view_details':
             viewAppointmentDetails();
             break;
+        case 'view_history':
+            viewAppointmentHistory();
+            break;
         default:
             echo json_encode(["success" => false, "message" => "Invalid action"]);
             break;
@@ -132,25 +135,48 @@ function generateReferenceCode($consultation_type)
 
     $reference_code = mysqli_real_escape_string($conn, $_POST['reference_code']);
     $status = mysqli_real_escape_string($conn, $_POST['status']);
-    $remarks = isset($_POST['remarks']) ? mysqli_real_escape_string($conn, $_POST['remarks']) : 'No remarks';
+    $remarks = isset($_POST['remarks']) ? trim(mysqli_real_escape_string($conn, $_POST['remarks'])) : '';
 
-    $sql = "SELECT id FROM consultations WHERE reference_code = '$reference_code' LIMIT 1";
+    // Fetch consultation
+    $sql = "SELECT id, status FROM consultations WHERE reference_code = '$reference_code' LIMIT 1";
     $result = mysqli_query($conn, $sql);
 
     if ($result && mysqli_num_rows($result) > 0) {
         $row = mysqli_fetch_assoc($result);
         $consultation_id = $row['id'];
+        $current_status = $row['status'];
 
-        $updateQuery = "UPDATE consultations SET status = '$status' WHERE id = '$consultation_id'";
+        // Validation: Must go from Ongoing -> Completed
+        if ($status === "Completed" && $current_status !== "Ongoing") {
+            echo json_encode(["success" => false, "message" => "Consultation must be marked as Ongoing before it can be completed."]);
+            return;
+        }
+
+        // Remarks are required when status is Completed
+        if ($status === "Completed" && empty($remarks)) {
+            echo json_encode(["success" => false, "message" => "Remarks are required when completing a consultation."]);
+            return;
+        }
+
+        // If no remarks provided, use default
+        if (empty($remarks)) {
+            $remarks = 'No remarks';
+        }
+
+        // Update the consultation
+        $updateQuery = "UPDATE consultations SET status = '$status', comments = '$remarks' WHERE id = '$consultation_id'";
         if (mysqli_query($conn, $updateQuery)) {
+            // Log in consultation_history
             $historyQuery = "INSERT INTO consultation_history (consultation_id, status, remarks, updated_at) 
                              VALUES ('$consultation_id', '$status', '$remarks', NOW())";
             mysqli_query($conn, $historyQuery);
 
-            echo json_encode(["success" => true, "message" => "Appointment updated successfully"]);
+            echo json_encode(["success" => true, "message" => "Appointment status updated to $status."]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Error updating appointment."]);
         }
     } else {
-        echo json_encode(["success" => false, "message" => "Invalid reference code"]);
+        echo json_encode(["success" => false, "message" => "Invalid reference code."]);
     }
 }
 
@@ -168,4 +194,29 @@ function viewAppointmentDetails() {
         echo json_encode(["success" => false, "message" => "Appointment not found"]);
     }
 }
+
+function viewAppointmentHistory() {
+    global $conn;
+
+    $reference_code = mysqli_real_escape_string($conn, $_POST['reference_code']);
+
+    $sql = "SELECT ch.status, ch.remarks, ch.updated_at
+            FROM consultation_history ch
+            INNER JOIN consultations c ON ch.consultation_id = c.id
+            WHERE c.reference_code = '$reference_code'
+            ORDER BY ch.updated_at ASC";
+
+    $result = mysqli_query($conn, $sql);
+
+    if ($result && mysqli_num_rows($result) > 0) {
+        $history = [];
+        while ($row = mysqli_fetch_assoc($result)) {
+            $history[] = $row;
+        }
+        echo json_encode(["success" => true, "data" => $history]);
+    } else {
+        echo json_encode(["success" => false, "message" => "No history found."]);
+    }
+}
+
 ?>

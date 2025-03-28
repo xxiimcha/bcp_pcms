@@ -19,7 +19,7 @@
 <body class="hold-transition login-page">
 <div class="login-box">
   <div class="login-logo">
-    <b>Admin</b> Panel
+    <b>PCMS</b>BCP
   </div>
   <div class="card">
     <div class="card-body login-card-body">
