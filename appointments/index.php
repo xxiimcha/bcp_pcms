@@ -78,7 +78,7 @@ include '../partials/head.php';
 
 <!-- View Modal -->
 <div class="modal fade" id="viewModal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
+  <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Appointment Details</h5>
@@ -87,35 +87,14 @@ include '../partials/head.php';
         </button>
       </div>
       <div class="modal-body">
-        <div class="row">
-          <div class="col-md-6">
-            <p><strong>Full Name:</strong> <span id="modalFullName"></span></p>
-            <p><strong>Email:</strong> <span id="modalEmail"></span></p>
-            <p><strong>Phone:</strong> <span id="modalPhone"></span></p>
-          </div>
-          <div class="col-md-6">
-            <p><strong>Consultation Type:</strong> <span id="modalConsultationType"></span></p>
-            <p><strong>Schedule Date:</strong> <span id="modalScheduleDate"></span></p>
-            <p><strong>Schedule Time:</strong> <span id="modalScheduleTime"></span></p>
-          </div>
-        </div>
+        <p><strong>Full Name:</strong> <span id="modalFullName"></span></p>
+        <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+        <p><strong>Phone:</strong> <span id="modalPhone"></span></p>
+        <p><strong>Consultation Type:</strong> <span id="modalConsultationType"></span></p>
+        <p><strong>Schedule Date:</strong> <span id="modalScheduleDate"></span></p>
+        <p><strong>Schedule Time:</strong> <span id="modalScheduleTime"></span></p>
         <p><strong>Status:</strong> <span id="modalStatus"></span></p>
         <p><strong>Remarks:</strong> <span id="modalRemarks">None</span></p>
-
-        <hr>
-        <h6>Consultation History</h6>
-        <table class="table table-sm table-bordered">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Status</th>
-              <th>Remarks</th>
-            </tr>
-          </thead>
-          <tbody id="historyTableBody">
-            <!-- History records will be inserted here -->
-          </tbody>
-        </table>
       </div>
       <div class="modal-footer" id="statusActionButtons">
         <!-- Dynamic Buttons -->
@@ -124,17 +103,34 @@ include '../partials/head.php';
   </div>
 </div>
 
+<!-- Remarks Modal -->
+<div class="modal fade" id="remarksModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="remarksForm">
+        <div class="modal-header">
+          <h5 class="modal-title">Complete Consultation</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="completionRemarks">Remarks / Feedback</label>
+            <textarea id="completionRemarks" class="form-control" name="remarks" rows="4" placeholder="Write remarks here..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Submit Feedback</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
-function getStatusColor(status) {
-  switch (status.toLowerCase()) {
-    case 'pending': return 'warning';
-    case 'approved': return 'primary';
-    case 'ongoing': return 'info';
-    case 'completed': return 'success';
-    case 'rejected': return 'danger';
-    default: return 'secondary';
-  }
-}
+let currentReferenceCode = "";
 
 function viewDetails(referenceCode) {
   currentReferenceCode = referenceCode;
@@ -170,31 +166,6 @@ function viewDetails(referenceCode) {
 
         buttons += `<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>`;
         $("#statusActionButtons").html(buttons);
-
-        // Load consultation history
-        $.ajax({
-          url: '../controller/consultation.php?action=view_history',
-          type: 'POST',
-          data: { reference_code: referenceCode },
-          dataType: 'json',
-          success: function(historyRes) {
-            if (historyRes.success) {
-              let historyRows = '';
-              historyRes.data.forEach(item => {
-                historyRows += `
-                  <tr>
-                    <td>${item.updated_at}</td>
-                    <td><span class="badge badge-${getStatusColor(item.status)}">${item.status}</span></td>
-                    <td>${item.remarks}</td>
-                  </tr>`;
-              });
-              $('#historyTableBody').html(historyRows);
-            } else {
-              $('#historyTableBody').html('<tr><td colspan="3">No history found.</td></tr>');
-            }
-          }
-        });
-
         $("#viewModal").modal("show");
       } else {
         Swal.fire('Error', response.message, 'error');
@@ -202,6 +173,77 @@ function viewDetails(referenceCode) {
     }
   });
 }
+
+function approveAppointment() {
+  Swal.fire({
+    title: 'Approve Appointment?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Approve'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      updateStatus("Approved", "Approved by admin");
+    }
+  });
+}
+
+function rejectAppointment() {
+  Swal.fire({
+    title: 'Reject Appointment',
+    input: 'text',
+    inputLabel: 'Optional Remarks',
+    inputPlaceholder: 'Reason for rejection',
+    showCancelButton: true,
+    confirmButtonText: 'Reject'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      updateStatus("Rejected", result.value || 'Rejected by admin');
+    }
+  });
+}
+
+function markAsOngoing() {
+  updateStatus("Ongoing", "Marked as Ongoing");
+}
+
+function openRemarksModal() {
+  $('#completionRemarks').val('');
+  $('#remarksModal').modal('show');
+}
+
+$('#remarksForm').submit(function(e) {
+  e.preventDefault();
+  const remarks = $('#completionRemarks').val().trim();
+  if (!remarks) {
+    Swal.fire('Required', 'Please enter remarks before completing.', 'warning');
+    return;
+  }
+  updateStatus("Completed", remarks);
+  $('#remarksModal').modal('hide');
+});
+
+function updateStatus(status, remarks = '') {
+  $.ajax({
+    url: '../controller/consultation.php?action=update_status',
+    type: 'POST',
+    data: { reference_code: currentReferenceCode, status: status, remarks: remarks },
+    success: function(response) {
+      Swal.fire('Updated!', `Appointment marked as ${status}.`, 'success').then(() => {
+        location.reload();
+      });
+    },
+    error: function() {
+      Swal.fire('Error', 'Something went wrong.', 'error');
+    }
+  });
+}
+
+$(function () {
+  $('#appointmentsTable').DataTable({
+    responsive: true,
+    autoWidth: false
+  });
+});
 </script>
 </body>
 </html>
