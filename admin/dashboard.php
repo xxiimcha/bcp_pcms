@@ -11,6 +11,22 @@ $query = "SELECT
 
 $result = mysqli_query($conn, $query);
 $data = mysqli_fetch_assoc($result);
+
+// Fetch recent announcements
+$announcementQuery = "SELECT title, created_at FROM announcements ORDER BY created_at DESC LIMIT 5";
+$announcementResult = mysqli_query($conn, $announcementQuery);
+
+// Fetch consultation types for chart
+$typeQuery = "SELECT consultation_type, COUNT(*) AS count FROM consultations GROUP BY consultation_type";
+$typeResult = mysqli_query($conn, $typeQuery);
+
+$consultationTypes = [];
+$consultationCounts = [];
+
+while ($row = mysqli_fetch_assoc($typeResult)) {
+  $consultationTypes[] = $row['consultation_type'];
+  $consultationCounts[] = $row['count'];
+}
 ?>
 
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -32,6 +48,7 @@ $data = mysqli_fetch_assoc($result);
     <section class="content">
       <div class="container-fluid">
         <div class="row">
+          <!-- New Appointments -->
           <div class="col-lg-3 col-6">
             <div class="small-box bg-info">
               <div class="inner">
@@ -45,6 +62,7 @@ $data = mysqli_fetch_assoc($result);
             </div>
           </div>
 
+          <!-- Completed -->
           <div class="col-lg-3 col-6">
             <div class="small-box bg-success">
               <div class="inner">
@@ -58,6 +76,7 @@ $data = mysqli_fetch_assoc($result);
             </div>
           </div>
 
+          <!-- Pending -->
           <div class="col-lg-3 col-6">
             <div class="small-box bg-warning">
               <div class="inner">
@@ -71,6 +90,7 @@ $data = mysqli_fetch_assoc($result);
             </div>
           </div>
 
+          <!-- Cancelled -->
           <div class="col-lg-3 col-6">
             <div class="small-box bg-danger">
               <div class="inner">
@@ -84,9 +104,123 @@ $data = mysqli_fetch_assoc($result);
             </div>
           </div>
         </div>
+
+        <!-- Charts Row -->
+        <div class="row">
+          <!-- Consultation Status Chart -->
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Consultation Status Overview</h3>
+              </div>
+              <div class="card-body">
+                <canvas id="consultationChart" height="150"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Consultation Type Chart -->
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Consultation Type Distribution</h3>
+              </div>
+              <div class="card-body">
+                <canvas id="typeChart" height="150"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Announcements Table -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Recent Announcements</h3>
+              </div>
+              <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php while ($row = mysqli_fetch_assoc($announcementResult)) { ?>
+                      <tr>
+                        <td><?php echo $row['title']; ?></td>
+                        <td><?php echo date('M d, Y', strtotime($row['created_at'])); ?></td>
+                      </tr>
+                    <?php } ?>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   </div>
+
   <?php include '../partials/footer.php'; ?>
 </div>
 <?php include '../partials/foot.php'; ?>
+
+<!-- ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Consultation Status Chart
+  const statusCtx = document.getElementById('consultationChart').getContext('2d');
+  const consultationChart = new Chart(statusCtx, {
+    type: 'pie',
+    data: {
+      labels: ['New', 'Completed', 'Pending', 'Cancelled'],
+      datasets: [{
+        data: [
+          <?php echo $data['new_appointments']; ?>,
+          <?php echo $data['completed']; ?>,
+          <?php echo $data['pending']; ?>,
+          <?php echo $data['cancelled']; ?>
+        ],
+        backgroundColor: ['#17a2b8', '#28a745', '#ffc107', '#dc3545']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+
+  // Consultation Type Chart
+  const typeCtx = document.getElementById('typeChart').getContext('2d');
+  const typeChart = new Chart(typeCtx, {
+    type: 'bar',
+    data: {
+      labels: <?php echo json_encode($consultationTypes); ?>,
+      datasets: [{
+        label: 'Consultations',
+        data: <?php echo json_encode($consultationCounts); ?>,
+        backgroundColor: '#007bff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          precision: 0
+        }
+      }
+    }
+  });
+</script>
