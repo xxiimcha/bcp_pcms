@@ -2,8 +2,9 @@
 include '../database/config.php'; 
 include '../partials/head.php';
 
-// Fetch all users
-$query = "SELECT * FROM users";
+$current_user_id = $_SESSION['user_id'] ?? 0;
+
+$query = "SELECT * FROM users WHERE id != $current_user_id";
 $result = mysqli_query($conn, $query);
 ?>
 
