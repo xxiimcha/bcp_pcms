@@ -24,6 +24,12 @@
             <p>Users</p>
           </a>
         </li>
+        <li class="nav-item">
+          <a href="../announcement/" class="nav-link">
+            <i class="nav-icon fas fa-bullhorn"></i>
+            <p>Announcements</p>
+          </a>
+        </li>
       </ul>
     </nav>
   </div>

@@ -1,7 +1,12 @@
 <?php
 include '../database/config.php';
 
-$query = "SELECT title, content, DATE_FORMAT(created_at, '%M %d, %Y') as date FROM announcements ORDER BY created_at DESC LIMIT 5";
+$query = "SELECT title, content, DATE_FORMAT(created_at, '%M %d, %Y') as date 
+          FROM announcements 
+          WHERE status = 'Published' 
+          ORDER BY created_at DESC 
+          LIMIT 5";
+
 $result = mysqli_query($conn, $query);
 
 $announcements = [];
